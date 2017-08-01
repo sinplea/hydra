@@ -1,0 +1,14 @@
+[ 'DASH/USD',
+  'EOS/USD',
+  'GNO/USD',
+  'USDT/USD',
+  'ETC/USD',
+  'ETH/USD',
+  'LTC/USD',
+  'REP/USD',
+  'BTC/USD',
+  'XLM/USD',
+  'XMR/USD',
+  'XRP/USD',
+  'ZEC/USD' ]
+
