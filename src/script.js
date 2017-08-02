@@ -40,7 +40,15 @@ async function main(){
 		console.log(err)
 	}
 
-	getCurrencyPrices(kraken, symbols)
+	run(kraken, symbols)
+}
+
+function run(market, symbols){
+	setTimeout(() => {
+		getCurrencyPrices(market, symbols)
+
+		run(market, symbols)
+	}, 5000)
 }
 
 function getUSDSymbols(symbols){
@@ -55,17 +63,14 @@ function getUSDSymbols(symbols){
 	return usdSymbols
 }
 
-function getCurrencyPrices(market, symbols){
+async function getCurrencyPrices(market, symbols){
 	for (let i = 0; i < symbols.length; i++){
-		setInterval(async () => {
+		let orderBook = await market.fetchOrderBook(symbols[i])
+		let bid = orderBook.bids.length ? orderBook.bids[0][0] : undefined
+		let ask = orderBook.bids.length ? orderBook.asks[0][0] : undefined
 		
-			let orderBook = await market.fetchOrderBook(symbols[i])
-			let bid = orderBook.bids.length ? orderBook.bids[0][0] : undefined
-			let ask = orderBook.bids.length ? orderBook.asks[0][0] : undefined
-			
-			teller.evaluate({ symbol: symbol[i], bid, ask})
-
-		},7000)
+//			teller.evaluate({ symbol: symbol[i], bid, ask})
+		console.log({symbol: symbols[i], bid, ask})	 	
 	}
 }
 
