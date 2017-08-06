@@ -1,8 +1,9 @@
 const ccxt = require('ccxt')
 
 const teller = require('./teller.js')
+const trendmaster = require('./trendmaster.js')
 
-// here we will setup the connections to our markets. 
+// here we will setup the connections to our markets.
 // we will try to trade between all US markets
 //
 // 1Broker
@@ -16,6 +17,8 @@ const teller = require('./teller.js')
 // livecoin
 // poloniex
 // okcoin(USD)
+
+const COOLDOWN = 60000 // milliseconds
 
 const BROKER_API_KEY = 'A49d8e1a1e95b15777d14f3119505ae3'
 const BITFINEX_API_KEY = '84bF0YXu3rZhzS6ObVdNd2oIpX5Cabvsbp636gJARQ2'
@@ -45,10 +48,10 @@ async function main(){
 
 function run(market, symbols){
 	setTimeout(() => {
-		getCurrencyPrices(market, symbols)
-
+		console.log('running...')
+		strategize(market, symbols)
 		run(market, symbols)
-	}, 5000)
+	}, COOLDOWN) // run every minute
 }
 
 function getUSDSymbols(symbols){
@@ -56,22 +59,18 @@ function getUSDSymbols(symbols){
 
 	for (let i = 0; i < symbols.length; i++){
 		if(symbols[i].includes('USD') && !symbols[i].includes('.d')){
-			usdSymbols.push(symbols[i])	
+			usdSymbols.push(symbols[i])
 		}
 	}
-	
+
 	return usdSymbols
 }
 
-async function getCurrencyPrices(market, symbols){
-	for (let i = 0; i < symbols.length; i++){
-		let orderBook = await market.fetchOrderBook(symbols[i])
-		let bid = orderBook.bids.length ? orderBook.bids[0][0] : undefined
-		let ask = orderBook.bids.length ? orderBook.asks[0][0] : undefined
-		
-//			teller.evaluate({ symbol: symbol[i], bid, ask})
-		console.log({symbol: symbols[i], bid, ask})	 	
-	}
+function strategize(market, symbols){
+	trendmaster.determine(market, 'XRP/USD')
+	// for(let i = 0; i < symbols.length; i++){
+	// 	trendmaster.getCurrentPrice(market, 'XRP/USD')
+	// }
 }
 
 main()

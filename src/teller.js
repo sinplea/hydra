@@ -1,6 +1,8 @@
 const _ = require('lodash')
+const chalk = require('chalk')
 
-let lastPricelog = {
+let lastPriceLog = {
+	'BCH/USD': null,
 	'DASH/USD': null,
 	'EOS/USD': null,
 	'GNO/USD': null,
@@ -17,29 +19,29 @@ let lastPricelog = {
 }
 
 module.exports = {
-	determine: function(price){
+	determine: async function(price){
 		let asking = price.ask
 
 		if(asking === null){
-			console.log('No asking price found for: '  + price.symbol)
-			return
+			return 'No asking price found for: ' + chalk.magenta(price.symbol)
 		}
 
 		if(lastPriceLog[price.symbol] === null){
 			lastPriceLog[price.symbol] = asking
-			return
+			return 'No record for ' + chalk.magenta(price.symbol) + '. Assigning value to log: ' + chalk.green(lastPriceLog[price.symbol])
 		}
 		
-		return evaluateAsking(asking)
+		return evaluateChange(asking, price.symbol)
 
 	}
 }
 
 function evaluateChange(price, symbol){
-	if (price > log[symbol]){
-		return
+	if (price >= lastPriceLog[symbol]){
+		return '[' + chalk.magenta(symbol) + '] Asking price has not lowered. Current asking: ' + chalk.yellow(price) + ' Last asking: ' + chalk.green(lastPriceLog[symbol])
 	}else{
-		let diff = log[symbol] - price
-		let percentChange = _.round((diff / log[symbol]), 2) 
+		let diff = lastPriceLog[symbol] - price
+		let percentChange = _.round((diff / lastPriceLog[symbol]), 4) 
+		return percentChange
 	}
 }
