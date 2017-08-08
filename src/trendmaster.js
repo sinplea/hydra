@@ -3,34 +3,38 @@ const moment = require('moment')
 const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
+const chalk = require('chalk')
 
-let lastClose = []
+let lastClose
 
 module.exports = {
+	init: function(symbols){
+		let emptyArray = []
+
+		for (let i = 0; i < symbols.length; i++){
+			emptyArray.push([])
+		}
+
+		lastClose = _.zipObject(symbols, emptyArray)
+	},
 	determine: async function(market, symbol){
 		try{
 			let movingAverages = await getSimpleMovingAverages(market, symbol)
 
 			if(typeof movingAverages !== 'error' && movingAverages !== undefined){
 				let trend = determineTrend(movingAverages) // uptrend true, downtrend false
+				let sell = false
 
-				let comparison = compareAverages(movingAverages)
-				// if comparison = true, then small > large
-				// if false. small < large
-
-				console.log({trend})
-
-				let buy
-				let sell
-
-				if (comparison){
-					buy = checkForBuyPossibility(movingAverages, symbol)
-				}else{
-					sell = checkForSellPossibility(movingAverages, symbol)
+				if (trend){
+					sell = movingAverages.smallSMA < movingAverages.largeSMA
 				}
 
-				console.log({ buy, sell })
+				return {
+					sell,
+					trend
+				}
 			}
+			return
 		}catch(err){
 			console.log(err)
 			return err
@@ -40,8 +44,8 @@ module.exports = {
 }
 
 async function getSimpleMovingAverages(market, symbol){
-	let smallPeriod = 5
-	let largePeriod = 10
+	let smallPeriod = 6
+	let largePeriod = 12
 
 	let largeSum = 0
 	let smallSum = 0
@@ -52,15 +56,15 @@ async function getSimpleMovingAverages(market, symbol){
 	try{
 		let priceObject = await market.fetchTicker(symbol)
 
-		lastClose.push(priceObject.ask)
+		lastClose[symbol].push(priceObject.ask)
 
-		if (lastClose.length < largePeriod){
-			console.log('Waiting for more data')
+		if (lastClose[symbol].length < largePeriod){
+			console.log(chalk.yellow('[' + symbol + ']: ') + 'fetching data...')
 			return
 		}
 
-		let largeDataSet = _.takeRight(lastClose, largePeriod)
-		let smallDataSet = _.takeRight(lastClose, smallPeriod)
+		let largeDataSet = _.takeRight(lastClose[symbol], largePeriod)
+		let smallDataSet = _.takeRight(lastClose[symbol], smallPeriod)
 
 		let smallSum = sumArray(smallDataSet)
 		let largeSum = sumArray(largeDataSet)
@@ -74,8 +78,6 @@ async function getSimpleMovingAverages(market, symbol){
 				largeSMA,
 				ask: priceObject.ask
 			}
-
-			console.log({symbol, ask:priceObject.ask})
 		}else{
 				new Error('smallSMA or largeSMA is not defined')
 		}
@@ -99,52 +101,6 @@ function determineTrend(movingAverages){
 	let large = movingAverages.largeSMA
 	let ask = movingAverages.ask
 
-	console.log({large, ask})
-
 	return ask > large
 
-}
-
-function compareAverages(movingAverages){
-	return movingAverages.smallSMA > movingAverages.largeSMA
-}
-
-function checkForBuyPossibility(movingAverages, symbol){
-	let symbolName = symbol.split('/')[0]
-	let filePath = path.resolve(__dirname, '..', symbolName + '.txt')
-
-	if(fs.existsSync(filePath)){
-		let buy
-		// read file, compare, overwrite data
-		let lastAveragesString = fs.readFileSync(filePath)
-		let lastAverages = JSON.parse(lastAveragesString)
-
-		buy = lastAverages.smallSMA < lastAverages.largeSMA
-		return buy
-
-	}else{
-		fs.writeFileSync(filePath, JSON/stringify(movingAverages))
-		console.log('Wrote to ' + filePath)
-		return false
-	}
-}
-
-function checkForSellPossibility(movingAverages, symbol){
-	let symbolName = symbol.split('/')[0]
-	let filePath = path.resolve(__dirname, '..', symbolName + '.txt')
-
-	if(fs.existsSync(filePath)){
-		let sell
-		// read file, compare, overwrite data
-		let lastAveragesString = fs.readFileSync(filePath)
-		let lastAverages = JSON.parse(lastAveragesString)
-
-		sell = lastAverages.smallSMA > lastAverages.largeSMA
-		return sell
-
-	}else{
-		fs.writeFileSync(filePath, JSON.stringify(movingAverages))
-		console.log('Wrote to ' + filePath)
-		return false
-	}
 }

@@ -1,4 +1,6 @@
 const ccxt = require('ccxt')
+const _ = require('lodash')
+const chalk = require('chalk')
 
 const teller = require('./teller.js')
 const trendmaster = require('./trendmaster.js')
@@ -43,14 +45,31 @@ async function main(){
 		console.log(err)
 	}
 
+	init(symbols)
 	run(kraken, symbols)
 }
 
+function init(symbols){
+	trendmaster.init(symbols)
+}
+
 function run(market, symbols){
-	setTimeout(() => {
-		console.log('running...')
-		strategize(market, symbols)
-		run(market, symbols)
+	setTimeout(async () => {
+
+		console.log(chalk.green('[RUNNING]'))
+
+		try{
+			let map = await strategize(market, symbols)
+
+			if (map !== undefined){
+				console.log(map)
+			}
+
+			run(market, symbols)
+		}catch(err){
+			console.log(err)
+		}
+
 	}, COOLDOWN) // run every minute
 }
 
@@ -66,11 +85,29 @@ function getUSDSymbols(symbols){
 	return usdSymbols
 }
 
-function strategize(market, symbols){
-	trendmaster.determine(market, 'XRP/USD')
-	// for(let i = 0; i < symbols.length; i++){
-	// 	trendmaster.getCurrentPrice(market, 'XRP/USD')
-	// }
+async function strategize(market, symbols){
+	let map
+	let statuses = []
+
+	for(let i = 0; i < symbols.length; i++){
+		try{
+			let status = await trendmaster.determine(market, symbols[i])
+
+			if (status !== undefined){
+				statuses.push(status)
+			}
+		}catch(err){
+			console.log(err)
+		}
+	}
+
+	if (statuses.length > 1){
+		map = _.zipObject(symbols, statuses)
+
+		return map
+	}
+
+	return
 }
 
 main()
