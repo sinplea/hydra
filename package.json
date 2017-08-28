@@ -11,10 +11,21 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.2",
-    "ccxt": "^1.1.142",
+    "ccxt": "^1.5.8",
     "chalk": "^2.0.1",
+    "cli-table": "^0.3.1",
+    "cliui": "^3.2.0",
+    "columnify": "^1.5.4",
+    "console.table": "^0.8.0",
     "exponential-moving-average": "^1.0.0",
     "lodash": "^4.17.4",
-    "moment": "^2.18.1"
+    "moment": "^2.18.1",
+    "table": "^4.0.1",
+    "throttled-queue": "^1.0.4",
+    "twilio": "^3.6.3"
+  },
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "sinon": "^3.2.1"
   }
 }

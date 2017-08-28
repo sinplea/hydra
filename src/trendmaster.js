@@ -4,86 +4,208 @@ const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
+require('console.table')
 
-let lastClose
+let map
 
 module.exports = {
 	init: function(symbols){
-		let emptyArray = []
+		let empty = []
 
 		for (let i = 0; i < symbols.length; i++){
-			emptyArray.push([])
+			empty.push({
+				lastClose: [],
+				period12: [],
+				period24: [],
+				signal: [],
+				macd: [],
+				histogram: [],
+				topPrices: []
+			})
 		}
 
-		lastClose = _.zipObject(symbols, emptyArray)
+		map = _.zipObject(symbols, empty)
 	},
 	determine: async function(market, symbol){
+		const SHORT_PERIOD = 12
+		const LONG_PERIOD = 26
+		const SIGNAL = 9
+
+		let lastClose = map[symbol].lastClose
+		let period12 = map[symbol].period12
+		let period24 = map[symbol].period24
+		let signal = map[symbol].signal
+		let macd = map[symbol].macd
+		let histogram = map[symbol].histogram
+		let topPrices = map[symbol].topPrices
+
 		try{
-			let movingAverages = await getSimpleMovingAverages(market, symbol)
+			let recentClose = await getRecentClose(market, symbol)
 
-			if(typeof movingAverages !== 'error' && movingAverages !== undefined){
-				let trend = determineTrend(movingAverages) // uptrend true, downtrend false
-				let sell = false
-
-				if (trend){
-					sell = movingAverages.smallSMA < movingAverages.largeSMA
-				}
-
-				return {
-					sell,
-					trend
-				}
+			if(lastClose.length < SHORT_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for short period... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period12, lastClose, symbol, SHORT_PERIOD)
 			}
-			return
+
+			if(lastClose.length < LONG_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for long period... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period24, lastClose, symbol, LONG_PERIOD)
+				// calculate macd
+				subtractRights(period12, period24, macd)
+			}
+
+			if (lastClose.length < LONG_PERIOD + SIGNAL){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for signal... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(signal, macd, symbol, SIGNAL)
+				// calculate histogram
+				subtractRights(macd, signal, histogram)
+			}
+
+			if(_.takeRight(histogram) > 0){
+				topPrices.push(_.takeRight(lastClose))
+			}else{
+				topPrices = []
+			}
+
+			let sellPossibility = evaluateSellPossibility(map[symbol])
+			let buyPossibility = evaluateBuyPossibility(map[symbol])
+			let trend = _.takeRight(histogram) > 0 ? true : false
+
+			return {
+				symbol: symbol,
+				sell: sellPossibility,
+				buy: buyPossibility,
+				trend: trend,
+				price: recentClose
+			}
 		}catch(err){
-			console.log(err)
-			return err
+			console.log('Error occured. Retrying...')
+			await this.determine(market, symbol)
+			return
 		}
 
 	}
 }
 
-async function getSimpleMovingAverages(market, symbol){
-	let smallPeriod = 6
-	let largePeriod = 12
+function evaluateBuyPossibility(map){
+	let lastTwo = _.takeRight(map.histogram, 2)
+	let prev = lastTwo[0]
+	let current = lastTwo[1]
 
-	let largeSum = 0
-	let smallSum = 0
+	if (prev < 0 && current > 0){
+		return true
+	}
 
-	let smallSMA
-	let largeSMA
+	return false
+}
 
+function evaluateSellPossibility(map){
+
+	// if trending down
+	if (_.takeRight(map.histogram) < 0){
+		return true
+	}
+
+	// if the future isn't looking good.
+	if (checkForSignificantLow(map)){
+		return true
+	}
+
+	return false
+}
+
+function checkForSignificantLow(map){
+	if (map.topPrices.length === 0){
+		return false
+	}
+
+	let current = _.takeRight(map.topPrices)
+	let max = _.max(map.topPrices)
+	let difference = max - current
+
+	if (difference < 0){
+		return false
+	}
+
+	let maxPercentChange = 0.03
+	let percentage = (difference / max) * 100
+
+	if (percentage > maxPercentChange){
+		map.topPrices = []
+		return true
+	}
+
+	return false
+}
+
+function checkIfHistoChangedSigns(map){
+	let current = _.takeRight(map.histogram)
+	let previousTwo = _.takeRight(map.histogram)
+	let prev = previousTwo[0]
+
+	if (prev > 0 && current < 0){
+		return true
+	}
+
+	return false
+}
+
+function calculateEMA(array, closings, symbol, period){
+	if(array.length !== 0){
+		let ema = getExponentialMovingAverage(closings, symbol, period, array)
+		array.push(ema)
+	}else{
+		let sma = getSimpleMovingAverage(closings, symbol, period)
+		array.push(sma)
+	}
+}
+
+function subtractRights(input1, input2, out){
+	out.push(_.takeRight(input1) - _.takeRight(input2))
+}
+
+async function getRecentClose(market, symbol){
 	try{
 		let priceObject = await market.fetchTicker(symbol)
-
-		lastClose[symbol].push(priceObject.ask)
-
-		if (lastClose[symbol].length < largePeriod){
-			console.log(chalk.yellow('[' + symbol + ']: ') + 'fetching data...')
-			return
-		}
-
-		let largeDataSet = _.takeRight(lastClose[symbol], largePeriod)
-		let smallDataSet = _.takeRight(lastClose[symbol], smallPeriod)
-
-		let smallSum = sumArray(smallDataSet)
-		let largeSum = sumArray(largeDataSet)
-
-		smallSMA = smallSum / smallPeriod
-		largeSMA = largeSum / largePeriod
-
-		if(smallSMA !== null && largeSMA !== null){
-			return {
-				smallSMA,
-				largeSMA,
-				ask: priceObject.ask
-			}
-		}else{
-				new Error('smallSMA or largeSMA is not defined')
-		}
+		map[symbol].lastClose.push(priceObject.ask)
+		return priceObject.ask
 	}catch(err){
-		console.log(err)
-		return err
+		setTimeout(() => {
+			getRecentClose(market, symbol)
+		}, 2000)
+	}
+
+}
+
+function getExponentialMovingAverage(base, symbol, period, values){
+	let ratio = 2 / (period + 1)
+	let close = _.takeRight(base)
+
+	let ema = (close * ratio) + (_.takeRight(values) * (1 - ratio))
+
+	if(ema !== null){
+		return ema
+	}else{
+		return new Error('ema is not defined')
+	}
+}
+
+function getSimpleMovingAverage(base, symbol, period){
+	let dataSet = _.take(base, period)
+
+	let sum = sumArray(dataSet)
+	let sma = sum / period
+
+	if(sma !== null){
+		return sma
+	}else{
+		return new Error('sma is not defined')
 	}
 }
 
@@ -95,12 +217,4 @@ function sumArray(array){
 	}
 
 	return sum
-}
-
-function determineTrend(movingAverages){
-	let large = movingAverages.largeSMA
-	let ask = movingAverages.ask
-
-	return ask > large
-
 }
