@@ -9,7 +9,7 @@ const client = new twilio(accountSid, authToken)
 
 const COOLDOWN = 4000
 const BET_PERCENTAGE = 0.30 // percentage to take from total usd
-const MIN_BALANCE = 15
+const MIN_BALANCE = 10
 
 module.exports = {
 	trade: async function(sellOptions, market){
@@ -45,7 +45,7 @@ module.exports = {
 			// if we want to buy a currency
 			if (buyCurrencyStatus !== undefined){
 				// check if we have USD
-				let money = balance.USD.free
+				let money = balance.USD.free * BET_PERCENTAGE
 
 				if (money > MIN_BALANCE){
 					let lastBestPrice = buyCurrencyStatus.price
