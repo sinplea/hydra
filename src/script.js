@@ -7,7 +7,8 @@ const throttle = throttledQueue(1, 2500)
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const COOLDOWN = 3600000 // milliseconds
+const COOLDOWN = 1800000 // 30 minutes
+const TRADE_COOLDOWN = 2500
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
@@ -43,7 +44,9 @@ function run(market, symbols){
 			let results = await strategize(market, symbols)
 
 			if (results !== undefined){
-				trader.trade(results, market)
+				setTimeout(async () => {
+					trader.trade(results, market)
+				}, TRADE_COOLDOWN)
 			}
 
 			run(market, symbols)
