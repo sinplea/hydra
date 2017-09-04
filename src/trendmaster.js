@@ -16,7 +16,7 @@ module.exports = {
 			empty.push({
 				lastClose: [],
 				period12: [],
-				period24: [],
+				period26: [],
 				signal: [],
 				macd: [],
 				histogram: [],
@@ -33,7 +33,7 @@ module.exports = {
 
 		let lastClose = map[symbol].lastClose
 		let period12 = map[symbol].period12
-		let period24 = map[symbol].period24
+		let period26 = map[symbol].period26
 		let signal = map[symbol].signal
 		let macd = map[symbol].macd
 		let histogram = map[symbol].histogram
@@ -53,9 +53,9 @@ module.exports = {
 				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for long period... ') + chalk.magenta(lastClose.length))
 				return
 			}else{
-				calculateEMA(period24, lastClose, symbol, LONG_PERIOD)
+				calculateEMA(period26, lastClose, symbol, LONG_PERIOD)
 				// calculate macd
-				subtractRights(period12, period24, macd)
+				subtractRights(period12, period26, macd)
 			}
 
 			if (lastClose.length < LONG_PERIOD + SIGNAL){
@@ -94,11 +94,11 @@ module.exports = {
 }
 
 function evaluateBuyPossibility(map){
-	let lastTwo = _.takeRight(map.histogram, 2)
-	let prev = lastTwo[0]
-	let current = lastTwo[1]
+	if (checkIfHistoChangedSigns(map)){
+		return true
+	}
 
-	if (prev < 0 && current > 0){
+	if (shortEMACrossedAboveLongEMA(map)){
 		return true
 	}
 
@@ -106,6 +106,10 @@ function evaluateBuyPossibility(map){
 }
 
 function evaluateSellPossibility(map){
+
+	if (shortEMACrossedBelowLongEMA()){
+		return true
+	}
 
 	// if trending down
 	if (_.takeRight(map.histogram) < 0){
@@ -115,6 +119,48 @@ function evaluateSellPossibility(map){
 	// if the future isn't looking good.
 	if (checkForSignificantLow(map)){
 		return true
+	}
+
+	return false
+}
+
+// means buy
+function shortEMACrossedAboveLongEMA(map){
+	let shorts = _.takeRight(map.period12, 2)
+	let longs = _.takeRight(map.period26, 2)
+
+	let prevShort = shorts[0]
+	let currentShort = shorts[1]
+	let prevLong = longs[0]
+	let currentLong = longs[1]
+
+	if (prevShort < prevLong){
+		if (currentShort > currentLong){
+			return true
+		}
+
+		return false
+	}
+
+	return false
+}
+
+// means sell
+function shortEMACrossedBelowLongEMA(map){
+	let shorts = _.takeRight(map.period12, 2)
+	let longs = _.takeRight(map.period26, 2)
+
+	let prevShort = shorts[0]
+	let currentShort = shorts[1]
+	let prevLong = longs[0]
+	let currentLong = longs[1]
+
+	if (prevShort > prevLong){
+		if (currentShort < currentLong){
+			return true
+		}
+
+		return false
 	}
 
 	return false
@@ -145,11 +191,11 @@ function checkForSignificantLow(map){
 }
 
 function checkIfHistoChangedSigns(map){
-	let current = _.takeRight(map.histogram)
-	let previousTwo = _.takeRight(map.histogram)
-	let prev = previousTwo[0]
+	let lastTwo = _.takeRight(map.histogram, 2)
+	let prev = lastTwo[0]
+	let current = lastTwo[1]
 
-	if (prev > 0 && current < 0){
+	if (prev < 0 && current > 0){
 		return true
 	}
 

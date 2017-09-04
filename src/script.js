@@ -1,8 +1,6 @@
 const ccxt = require('ccxt')
 const _ = require('lodash')
 const chalk = require('chalk')
-const throttledQueue = require('throttled-queue')
-const throttle = throttledQueue(1, 2500)
 
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
