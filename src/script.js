@@ -4,7 +4,6 @@ const chalk = require('chalk')
 const CronJob = require('cron').CronJob
 const throttledQueue = require('throttled-queue')
 
-
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
@@ -37,25 +36,28 @@ function init(symbols){
 }
 
 function run(market, symbols){
-	let job = new CronJob('0 */30 * * * *', async function(){
-		console.log(chalk.green('[RUNNING]'))
+	let job = new CronJob({
+		cronTime: '0 */30 * * * *',
+		onTick: async function(){
+			console.log(chalk.green('[RUNNING]'))
 
-		try{
-			let results = await strategize(market, symbols)
+			try{
+				let results = await strategize(market, symbols)
 
-			if (results !== undefined){
-					trader.trade(results, market) // evaluate trade possibilites
+				if (results !== undefined){
+						trader.trade(results, market) // evaluate trade possibilites
+				}
+
+				run(market, symbols)
+			}catch(err){
+				console.log(err)
 			}
+		},
+		start: true,
+		timeZone: 'America/Chicago'
+	})
 
-			run(market, symbols)
-		}catch(err){
-			console.log(err)
-		}
-	}, function(){
-		// when job ends
-	},
-	true, // Starts job immediately
-	)
+	job.start()
 }
 
 function getUSDSymbols(symbols){

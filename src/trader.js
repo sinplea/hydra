@@ -51,13 +51,14 @@ async function tryToBuyCurrency(sellOptions){
 			let amount = _.round(money / lastBestPrice, 8)
 
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
-			console.log(chalk.yellow('Reason: ') + buyCurrencyStatus.buyReason)
+			console.log(chalk.yellow('Reason: ' + buyCurrencyStatus.buyReason))
 
 			await fillBuyOrder(market, buyCurrencyStatus.symbol, amount)
 		}else{
 			console.log(chalk.red('USD bet is less than minimum allowed. Texting user.'))
 			alertUser()
 		}
+	}
 }
 
 async function tryToSellCurrency(sellOptions, current){
