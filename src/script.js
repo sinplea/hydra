@@ -1,12 +1,14 @@
 const ccxt = require('ccxt')
 const _ = require('lodash')
 const chalk = require('chalk')
+const CronJob = require('cron').CronJob
+const throttledQueue = require('throttled-queue')
+
 
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const COOLDOWN = 1800000 // 30 minutes
-const TRADE_COOLDOWN = 2500
+const stratigizeThrottle = throttledQueue(2, 2000) // 2 request every 2 seconds
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
@@ -20,10 +22,11 @@ async function main(){
 		let products = await kraken.loadMarkets()
 		let productKeys = Object.keys(products)
 		let symbols = getUSDSymbols(productKeys)
-		console.log(symbols)
 
 		init(symbols)
 		run(kraken, symbols)
+
+		console.log(chalk.magenta('Hydra running.'))
 	}catch(err){
 		console.log(err)
 	}
@@ -34,25 +37,25 @@ function init(symbols){
 }
 
 function run(market, symbols){
-	setTimeout(async () => {
-
+	let job = new CronJob('0 */30 * * * *', async function(){
 		console.log(chalk.green('[RUNNING]'))
 
 		try{
 			let results = await strategize(market, symbols)
 
 			if (results !== undefined){
-				setTimeout(async () => {
-					trader.trade(results, market)
-				}, TRADE_COOLDOWN)
+					trader.trade(results, market) // evaluate trade possibilites
 			}
 
 			run(market, symbols)
 		}catch(err){
 			console.log(err)
 		}
-
-	}, COOLDOWN) // run every minute
+	}, function(){
+		// when job ends
+	},
+	true, // Starts job immediately
+	)
 }
 
 function getUSDSymbols(symbols){
@@ -70,17 +73,20 @@ function getUSDSymbols(symbols){
 async function strategize(market, symbols){
 	let results = []
 
+	// throttle this to avoid kraken timing out our requests
 	for(let i = 0; i < symbols.length; i++){
-		try{
-			let sellOptions = await trendmaster.determine(market, symbols[i])
+		stratigizeThrottle(async function(){
+			try{
+				let sellOptions = await trendmaster.determine(market, symbols[i])
 
-			if (sellOptions !== undefined){
-				results.push(sellOptions)
+				if (sellOptions !== undefined){
+					results.push(sellOptions)
+				}
+
+			}catch(err){
+				console.log(err)
 			}
-
-		}catch(err){
-			console.log(err)
-		}
+		})
 	}
 
 	if (results.length === symbols.length){
