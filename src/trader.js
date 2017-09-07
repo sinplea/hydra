@@ -51,6 +51,7 @@ async function tryToBuyCurrency(sellOptions){
 			let amount = _.round(money / lastBestPrice, 8)
 
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
+			console.log(chalk.yellow('Reason: ') + buyCurrencyStatus.buyReason)
 
 			await fillBuyOrder(market, buyCurrencyStatus.symbol, amount)
 		}else{
@@ -72,7 +73,8 @@ async function tryToSellCurrency(sellOptions, current){
 
 		if (totalInvestment < 0.0001) continue
 
-		console.log(chalk.yellow("Trying to sell: " + totalInvestment + " of " + currencies[i]))
+		console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
+		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 		await fillSellOrder(market, currencies[i], _.round(totalInvestment, 8))
 	}
 }

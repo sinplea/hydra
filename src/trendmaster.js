@@ -73,16 +73,25 @@ module.exports = {
 				topPrices = []
 			}
 
-			let sellPossibility = evaluateSellPossibility(map[symbol])
-			let buyPossibility = evaluateBuyPossibility(map[symbol])
+			let sellEvaluation = evaluateSellPossibility(map[symbol])
+			let buyEvaluation = evaluateBuyPossibility(map[symbol])
+
+			let sell = sellEvaluation.bool
+			let sellReason = sellEvaluation.reason
+
+			let buy = buyEvaluation.bool
+			let buyReason = buyEvaluation.reason
+
 			let trend = _.takeRight(histogram) > 0 ? true : false
 
 			return {
 				symbol: symbol,
-				sell: sellPossibility,
-				buy: buyPossibility,
+				sell: sell,
+				buy: buy,
 				trend: trend,
-				price: recentClose
+				price: recentClose,
+				buyReason: buyReason,
+				sellReason: sellReason
 			}
 		}catch(err){
 			console.log('Error occured. Retrying...')
@@ -95,33 +104,54 @@ module.exports = {
 
 function evaluateBuyPossibility(map){
 	if (checkIfHistoChangedSigns(map)){
-		return true
+		return {
+			bool: true,
+			reason: 'Histogram went from negative to positve.'
+		}
 	}
 
 	if (shortEMACrossedAboveLongEMA(map)){
-		return true
+		return {
+			bool: true,
+			reason: 'Short EMA crossed above long EMA indicating a good time to buy.'
+		}
 	}
 
-	return false
+	return {
+		bool: false,
+		reason: ''
+	}
 }
 
 function evaluateSellPossibility(map){
 
 	if (shortEMACrossedBelowLongEMA()){
-		return true
+		return {
+			bool: true,
+			reason: 'Short EMA crossed below a long EMA indicating a time to sell.'
+		}
 	}
 
 	// if trending down
 	if (_.takeRight(map.histogram) < 0){
-		return true
+		return {
+			bool: true,
+			reason: 'Histogram indicated a down trend.'
+		}
 	}
 
 	// if the future isn't looking good.
 	if (checkForSignificantLow(map)){
-		return true
+		return {
+			bool: true,
+			reason: 'Saw a significant drop in currency\'s best price.'
+		}
 	}
 
-	return false
+	return {
+		bool: false,
+		reason: ''
+	}
 }
 
 // means buy
