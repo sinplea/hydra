@@ -40,6 +40,7 @@ function run(market, symbols){
 		cronTime: '0 */30 * * * *',
 		onTick: async function(){
 			console.log(chalk.green('[RUNNING]'))
+			console.log(chalk.green('*************'))
 
 			try{
 				let results = await strategize(market, symbols)
@@ -47,8 +48,6 @@ function run(market, symbols){
 				if (results !== undefined){
 						trader.trade(results, market) // evaluate trade possibilites
 				}
-
-				run(market, symbols)
 			}catch(err){
 				console.log(err)
 			}

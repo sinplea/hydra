@@ -125,7 +125,7 @@ function evaluateBuyPossibility(map){
 
 function evaluateSellPossibility(map){
 
-	if (shortEMACrossedBelowLongEMA()){
+	if (shortEMACrossedBelowLongEMA(map)){
 		return {
 			bool: true,
 			reason: 'Short EMA crossed below a long EMA indicating a time to sell.'
