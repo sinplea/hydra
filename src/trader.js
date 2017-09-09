@@ -4,7 +4,7 @@ const twilio = require('twilio')
 const chalk = require('chalk')
 const throttledQueue = require('throttled-queue')
 
-const tradeThrottle = throttledQueue(1, 1000) // one trade per second
+const tradeThrottle = throttledQueue(1, 2000) // one trade per second
 const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
 const authToken = '6e502eaa008df7d3e081b66c4cadc286'
 const client = new twilio(accountSid, authToken)

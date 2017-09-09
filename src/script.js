@@ -7,7 +7,7 @@ const throttledQueue = require('throttled-queue')
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const stratigizeThrottle = throttledQueue(2, 2000) // 2 request every 2 seconds
+const stratigizeThrottle = throttledQueue(1, 2000) // 1 request every 2 seconds
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
