@@ -96,9 +96,7 @@ module.exports = {
 		}catch(err){
 			console.log('Error occured. Retrying...')
 			if (err) {
-				setTimeout(() => {
-					await this.determine(market, symbol)
-				})
+				await this.determine(market, symbol)
 			}
 
 		}
