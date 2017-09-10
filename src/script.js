@@ -1,21 +1,29 @@
 const ccxt = require('ccxt')
 const _ = require('lodash')
 const chalk = require('chalk')
-const CronJob = require('cron').CronJob
-const throttledQueue = require('throttled-queue')
+const figlet = require('figlet')
 
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const stratigizeThrottle = throttledQueue(1, 2000) // 1 request every 2 seconds
+const run_cooldown = 900000
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
+
+const figletOptions = {
+	font: 'jazmine',
+	horizontalLayout: 'default',
+	verticalLayout: 'default'
+}
 
 async function main(){
 	let kraken = ccxt.kraken({
 		apiKey: API_KEY,
 		secret: API_SECRET
 	})
+
+	console.log(chalk.magenta(figlet.textSync('Hydra', figletOptions)))
+	console.log('\nWelcome to Hydra: A trading bot for Kraken.com\n')
 
 	try{
 		let products = await kraken.loadMarkets()
@@ -25,7 +33,7 @@ async function main(){
 		init(symbols)
 		run(kraken, symbols)
 
-		console.log(chalk.magenta('Hydra running.'))
+
 	}catch(err){
 		console.log(err)
 	}
@@ -35,28 +43,17 @@ function init(symbols){
 	trendmaster.init(symbols)
 }
 
-function run(market, symbols){
-	let job = new CronJob({
-		cronTime: '0 */30 * * * *',
-		onTick: async function(){
-			console.log(chalk.green('[RUNNING]'))
-			console.log(chalk.green('*************'))
-
-			try{
-				let results = await strategize(market, symbols)
-
-				if (results !== undefined){
-						trader.trade(results, market) // evaluate trade possibilites
-				}
-			}catch(err){
-				console.log(err)
-			}
-		},
-		start: true,
-		timeZone: 'America/Chicago'
-	})
-
-	job.start()
+async function run(market, symbols){
+	try{
+		console.log(chalk.green('[____Running____]'))
+		let results = await strategize(market, symbols)
+		if (results !== undefined){
+				trader.trade(results, market) // evaluate trade possibilites
+		}
+		setTimeout(async () => { await run(market, symbols) }, run_cooldown)
+	}catch(err){
+		console.log(err)
+	}
 }
 
 function getUSDSymbols(symbols){
@@ -76,25 +73,21 @@ async function strategize(market, symbols){
 
 	// throttle this to avoid kraken timing out our requests
 	for(let i = 0; i < symbols.length; i++){
-		stratigizeThrottle(async function(){
 			try{
 				let sellOptions = await trendmaster.determine(market, symbols[i])
 
 				if (sellOptions !== undefined){
 					results.push(sellOptions)
+					console.log(sellOptions)
 				}
 
+				if (i === symbols.length - 1 && results.length > 0){
+						return results
+				}
 			}catch(err){
 				console.log(err)
 			}
-		})
 	}
-
-	if (results.length === symbols.length){
-		return results
-	}
-
-	return
 }
 
 main()

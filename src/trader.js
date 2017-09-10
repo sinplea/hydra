@@ -24,10 +24,10 @@ module.exports = {
 
 			for (let i = 0; i < currencies.length; i++){
 				tradeThrottle(async function(){
-					tryToSellCurrency(sellOptions, currencies[i])
+					await tryToSellCurrency(sellOptions, currencies[i])
 				})
 			}
-			tryToBuyCurrency(sellOptions)
+			await tryToBuyCurrency(sellOptions)
 		}catch(err){
 			console.log(err)
 

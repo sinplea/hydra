@@ -19,6 +19,7 @@
     "console.table": "^0.8.0",
     "cron": "^1.2.1",
     "exponential-moving-average": "^1.0.0",
+    "figlet": "^1.2.0",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "table": "^4.0.1",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.1",
+    "mocha": "^3.5.0",
     "sinon": "^3.2.1"
   }
 }
