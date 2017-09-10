@@ -2,9 +2,7 @@ const _ = require('lodash')
 const ccxt = require('ccxt')
 const twilio = require('twilio')
 const chalk = require('chalk')
-const throttledQueue = require('throttled-queue')
 
-const tradeThrottle = throttledQueue(1, 2000) // one trade per second
 const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
 const authToken = '6e502eaa008df7d3e081b66c4cadc286'
 const client = new twilio(accountSid, authToken)
@@ -23,10 +21,9 @@ module.exports = {
 			console.log('Investments in: ' + currencies)
 
 			for (let i = 0; i < currencies.length; i++){
-				tradeThrottle(async function(){
-					await tryToSellCurrency(sellOptions, currencies[i])
-				})
+				await tryToSellCurrency(sellOptions, currencies[i], i)
 			}
+
 			await tryToBuyCurrency(sellOptions)
 		}catch(err){
 			console.log(err)
@@ -61,23 +58,25 @@ async function tryToBuyCurrency(sellOptions){
 	}
 }
 
-async function tryToSellCurrency(sellOptions, current){
-	// get sell/buy status from sellOptions
-	let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
+async function tryToSellCurrency(sellOptions, current, delayModifier){
+	setTimeout(async () => {
+		// get sell/buy status from sellOptions
+		let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
 
-	if (sellCurrencyStatuses == undefined) continue
+		if (sellCurrencyStatuses == undefined) continue
 
-	// if sell
-	if (sellCurrencyStatuses.sell === true){
-		let symbolLookUpString = current.split('/')[0]
-		let totalInvestment = balance[symbolLookUpString].free
+		// if sell
+		if (sellCurrencyStatuses.sell === true){
+			let symbolLookUpString = current.split('/')[0]
+			let totalInvestment = balance[symbolLookUpString].free
 
-		if (totalInvestment < 0.0001) continue
+			if (totalInvestment < 0.0001) continue
 
-		console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
-		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
-		await fillSellOrder(market, currencies[i], _.round(totalInvestment, 8))
-	}
+			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
+			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
+			await fillSellOrder(market, currencies[i], _.round(totalInvestment, 8))
+		}
+	}, delayModifier * 1000)
 }
 
 async function fillSellOrder(market, symbol, amount){
