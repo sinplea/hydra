@@ -21,10 +21,10 @@ module.exports = {
 			console.log('Investments in: ' + currencies)
 
 			for (let i = 0; i < currencies.length; i++){
-				await tryToSellCurrency(sellOptions, currencies[i], i)
+				await tryToSellCurrency(sellOptions, balance, currencies[i], i)
 			}
 
-			await tryToBuyCurrency(sellOptions)
+			await tryToBuyCurrency(sellOptions, balance)
 		}catch(err){
 			console.log(err)
 
@@ -36,7 +36,7 @@ module.exports = {
 	}
 }
 
-async function tryToBuyCurrency(sellOptions){
+async function tryToBuyCurrency(sellOptions, balance){
 	let buyCurrencyStatus = _.find(sellOptions, function(o){ return o.buy === true && o.sell === false})
 	// if we want to buy a currency
 	if (buyCurrencyStatus !== undefined){
@@ -58,7 +58,7 @@ async function tryToBuyCurrency(sellOptions){
 	}
 }
 
-async function tryToSellCurrency(sellOptions, current, delayModifier){
+async function tryToSellCurrency(sellOptions, balance, current, delayModifier){
 	setTimeout(async () => {
 		// get sell/buy status from sellOptions
 		let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
