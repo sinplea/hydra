@@ -63,14 +63,18 @@ async function tryToSellCurrency(sellOptions, current, delayModifier){
 		// get sell/buy status from sellOptions
 		let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
 
-		if (sellCurrencyStatuses == undefined) continue
+		if (sellCurrencyStatuses == undefined) {
+			return
+		}
 
 		// if sell
 		if (sellCurrencyStatuses.sell === true){
 			let symbolLookUpString = current.split('/')[0]
 			let totalInvestment = balance[symbolLookUpString].free
 
-			if (totalInvestment < 0.0001) continue
+			if (totalInvestment < 0.0001) {
+				return
+			}
 
 			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
 			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))

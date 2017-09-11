@@ -11,7 +11,7 @@ const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
 const figletOptions = {
-	font: 'jazmine',
+	font: 'Jazmine',
 	horizontalLayout: 'default',
 	verticalLayout: 'default'
 }
