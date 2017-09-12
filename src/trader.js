@@ -24,7 +24,7 @@ module.exports = {
 
 			setTimeout(async () => {
 				await tryToBuyCurrency(sellOptions, balance, market)
-			}, 2000)
+			}, 3000)
 
 		}catch(err){
 			console.log(err)
