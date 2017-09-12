@@ -17,7 +17,6 @@ module.exports = {
 			let balance = await market.fetchBalance()
 			// currencies I currently have money invested in
 			let currencies = findInvestments(balance)
-			console.log('Investments in: ' + currencies)
 
 			for (let i = 0; i < currencies.length; i++){
 				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
@@ -80,7 +79,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 
 			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
 			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
-			await fillSellOrder(market, currencies[i], _.round(totalInvestment, 8))
+			await fillSellOrder(market, current, _.round(totalInvestment, 8))
 		}
 	}, delayModifier * 1000)
 }
