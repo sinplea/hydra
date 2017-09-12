@@ -7,7 +7,6 @@ const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
 const authToken = '6e502eaa008df7d3e081b66c4cadc286'
 const client = new twilio(accountSid, authToken)
 
-const COOLDOWN = 4000
 const BET_PERCENTAGE = 0.30 // percentage to take from total usd
 const MIN_BALANCE = 10
 
@@ -24,7 +23,10 @@ module.exports = {
 				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
 			}
 
-			await tryToBuyCurrency(sellOptions, balance, market)
+			setTimeout(async () => {
+				await tryToBuyCurrency(sellOptions, balance, market)
+			}, 2000)
+
 		}catch(err){
 			console.log(err)
 
