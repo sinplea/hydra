@@ -77,7 +77,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 				return
 			}
 
-			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + currencies[i]))
+			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
 			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 			await fillSellOrder(market, current, _.round(totalInvestment, 8))
 		}
