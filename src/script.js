@@ -33,7 +33,6 @@ async function main(){
 		init(symbols)
 		run(kraken, symbols)
 
-
 	}catch(err){
 		console.log(err)
 	}
@@ -78,7 +77,6 @@ async function strategize(market, symbols){
 
 				if (sellOptions !== undefined){
 					results.push(sellOptions)
-					console.log(sellOptions)
 				}
 
 				if (i === symbols.length - 1 && results.length > 0){
