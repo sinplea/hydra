@@ -87,7 +87,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 async function fillSellOrder(market, symbol, amount){
 	try{
 		let ticket = await market.createMarketSellOrder(symbol, amount)
-		console.log(chalk.green({ticket}))
+		console.log(chalk.green(ticket))
 	}catch (err){
 		console.log(chalk.red(err))
 	}
@@ -96,7 +96,7 @@ async function fillSellOrder(market, symbol, amount){
 async function fillBuyOrder(market, symbol, amount){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
-		console.log(chalk.green({ticket}))
+		console.log(chalk.green(ticket))
 	}catch (err){
 		console.log(chalk.red(err))
 	}

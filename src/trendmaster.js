@@ -222,12 +222,14 @@ function checkForSignificantLow(map){
 	return false
 }
 
+// Checks over a longer history to avoid false occurences.
 function checkIfHistoChangedSigns(map){
-	let lastTwo = _.takeRight(map.histogram, 2)
-	let prev = lastTwo[0]
-	let current = lastTwo[1]
+	let lastThree = _.takeRight(map.histogram, 3)
+	let last = lastThree[0]
+	let mid = lastThree[1]
+	let current = lastThree[2]
 
-	if (prev < 0 && current > 0){
+	if (prev < 0 && current > 0 && mid > 0){
 		return true
 	}
 
