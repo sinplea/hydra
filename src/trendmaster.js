@@ -229,7 +229,7 @@ function checkIfHistoChangedSigns(map){
 	let mid = lastThree[1]
 	let current = lastThree[2]
 
-	if (prev < 0 && current > 0 && mid > 0){
+	if (last < 0 && current > 0 && mid > 0){
 		return true
 	}
 
