@@ -6,7 +6,7 @@ const figlet = require('figlet')
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const RUN_COOLDOWN = 1800000 // 30 minutes
+const RUN_COOLDOWN = 900000 //1800000 // 30 minutes
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
@@ -47,7 +47,7 @@ async function run(market, symbols){
 		console.log(chalk.green('[____Running____]'))
 		let results = await strategize(market, symbols)
 		if (results !== undefined){
-				trader.trade(results, market) // evaluate trade possibilites
+				await trader.trade(results, market) // evaluate trade possibilites
 		}
 		setTimeout(async () => { await run(market, symbols) }, RUN_COOLDOWN)
 	}catch(err){

@@ -15,6 +15,8 @@ module.exports = {
 		for (let i = 0; i < symbols.length; i++){
 			empty.push({
 				lastClose: [],
+				period5: [],
+				period10: [],
 				period12: [],
 				period26: [],
 				signal: [],
@@ -27,11 +29,15 @@ module.exports = {
 		map = _.zipObject(symbols, empty)
 	},
 	determine: async function(market, symbol){
+		const SHORTEST_PERIOD = 5
+		const SHORTER_PERIOD = 10
 		const SHORT_PERIOD = 12
 		const LONG_PERIOD = 26
 		const SIGNAL = 9
 
 		let lastClose = map[symbol].lastClose
+		let period5 = map[symbol].period5
+		let period10 = map[symbol].period10
 		let period12 = map[symbol].period12
 		let period26 = map[symbol].period26
 		let signal = map[symbol].signal
@@ -41,6 +47,20 @@ module.exports = {
 
 		try{
 			let recentClose = await getRecentClose(market, symbol)
+
+			if(lastClose.length < SHORTEST_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 5... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period5, lastClose, symbol, SHORTEST_PERIOD)
+			}
+
+			if(lastClose.length < SHORTER_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 10... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period10, lastClose, symbol, SHORTEST_PERIOD)
+			}
 
 			if(lastClose.length < SHORT_PERIOD){
 				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for short period... ') + chalk.magenta(lastClose.length))
@@ -82,13 +102,10 @@ module.exports = {
 			let buy = buyEvaluation.bool
 			let buyReason = buyEvaluation.reason
 
-			let trend = _.takeRight(histogram) > 0 ? true : false
-
 			return {
 				symbol: symbol,
 				sell: sell,
 				buy: buy,
-				trend: trend,
 				price: recentClose,
 				buyReason: buyReason,
 				sellReason: sellReason
@@ -158,8 +175,8 @@ function evaluateSellPossibility(map){
 
 // means buy
 function shortEMACrossedAboveLongEMA(map){
-	let shorts = _.takeRight(map.period12, 2)
-	let longs = _.takeRight(map.period26, 2)
+	let shorts = _.takeRight(map.period5, 2)
+	let longs = _.takeRight(map.period10, 2)
 
 	let prevShort = shorts[0]
 	let currentShort = shorts[1]
@@ -179,8 +196,8 @@ function shortEMACrossedAboveLongEMA(map){
 
 // means sell
 function shortEMACrossedBelowLongEMA(map){
-	let shorts = _.takeRight(map.period12, 2)
-	let longs = _.takeRight(map.period26, 2)
+	let shorts = _.takeRight(map.period5, 2)
+	let longs = _.takeRight(map.period10, 2)
 
 	let prevShort = shorts[0]
 	let currentShort = shorts[1]
@@ -224,12 +241,11 @@ function checkForSignificantLow(map){
 
 // Checks over a longer history to avoid false occurences.
 function checkIfHistoChangedSigns(map){
-	let lastThree = _.takeRight(map.histogram, 3)
-	let last = lastThree[0]
-	let mid = lastThree[1]
-	let current = lastThree[2]
+	let set = _.takeRight(map.histogram, 2)
+	let last = set[0]
+	let current = set[1]
 
-	if (last < 0 && current > 0 && mid > 0){
+	if (last < 0 && current > 0){
 		return true
 	}
 
