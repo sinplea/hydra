@@ -4,7 +4,6 @@ const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
-require('console.table')
 
 let map
 
@@ -47,6 +46,8 @@ module.exports = {
 
 		try{
 			let recentClose = await getRecentClose(market, symbol)
+
+			// console.log({symbol, lastClose})
 
 			if(lastClose.length < SHORTEST_PERIOD){
 				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 5... ') + chalk.magenta(lastClose.length))
@@ -266,11 +267,17 @@ function subtractRights(input1, input2, out){
 	out.push(_.takeRight(input1) - _.takeRight(input2))
 }
 
+// Pretty sure the ticker from ccxt is shit. Going to get 
+// prices from somewhere else.
 async function getRecentClose(market, symbol){
+	let clean = symbol.replace('/', '')
+	let lowercase = clean.toLowerCase();
+
 	try{
-		let priceObject = await market.fetchTicker(symbol)
-		map[symbol].lastClose.push(priceObject.ask)
-		return priceObject.ask
+		let url = 'https://api.cryptowat.ch/markets/kraken/' + lowercase + '/price'
+		let priceObject = await axios.get(url)
+		map[symbol].lastClose.push(priceObject.data.result.price)
+		return priceObject.data.result.price
 	}catch(err){
 		setTimeout(() => {
 			getRecentClose(market, symbol)

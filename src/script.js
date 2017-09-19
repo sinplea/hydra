@@ -6,7 +6,7 @@ const figlet = require('figlet')
 const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
-const RUN_COOLDOWN = 300000 //1800000 // 30 minutes
+const RUN_COOLDOWN = 900000 //1800000 // 30 minutes
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
