@@ -161,12 +161,12 @@ function evaluateSellPossibility(map){
 	}
 
 	// if the future isn't looking good.
-	if (checkForSignificantLow(map)){
-		return {
-			bool: true,
-			reason: 'Saw a significant drop in currency\'s best price.'
-		}
-	}
+	// if (checkForSignificantLow(map)){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Saw a significant drop in currency\'s best price.'
+	// 	}
+	// }
 
 	return {
 		bool: false,

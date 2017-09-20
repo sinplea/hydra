@@ -8,7 +8,7 @@ const authToken = '6e502eaa008df7d3e081b66c4cadc286'
 const client = new twilio(accountSid, authToken)
 
 const BET_PERCENTAGE = 0.30 // percentage to take from total usd
-const MIN_BALANCE = 10
+const MIN_BALANCE = 7.5
 
 module.exports = {
 	trade: async function(sellOptions, market){
