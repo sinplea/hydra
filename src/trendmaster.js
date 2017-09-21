@@ -213,20 +213,26 @@ function shortEMACrossedAboveLongEMA(map){
 	let shorts = _.takeRight(map.period5, 2)
 	let longs = _.takeRight(map.period10, 2)
 
-	let prevShort = shorts[0]
-	let currentShort = shorts[1]
-	let prevLong = longs[0]
-	let currentLong = longs[1]
+	console.log(shorts)
+	console.log(longs)
 
-	if (prevShort < prevLong){
-		if (currentShort > currentLong){
-			return true
-		}
+	// let prevShort = shorts[0]
+	// let currentShort = shorts[1]
+	// let prevLong = longs[0]
+	// let currentLong = longs[1]
 
-		return false
-	}
+	// console.log(chalk.blue({prevShort, currentShort}))
+	// console.log(chalk.magenta({prevLong, currentLong}))
 
-	return false
+	// if (prevShort < prevLong){
+	// 	if (currentShort > currentLong){
+	// 		return true
+	// 	}
+
+	// 	return false
+	// }
+
+	// return false
 }
 
 // means sell
