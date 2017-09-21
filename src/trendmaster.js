@@ -5,6 +5,8 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
+const PERCENT_CHANGE = 0.005
+
 let map
 
 module.exports = {
@@ -21,7 +23,8 @@ module.exports = {
 				signal: [],
 				macd: [],
 				histogram: [],
-				topPrices: []
+				topPrices: [],
+				paidAt: -1
 			})
 		}
 
@@ -43,6 +46,7 @@ module.exports = {
 		let macd = map[symbol].macd
 		let histogram = map[symbol].histogram
 		let topPrices = map[symbol].topPrices
+		let paidAt = map[symbol].paidAt
 
 		try{
 			let recentClose = await getRecentClose(market, symbol)
@@ -94,7 +98,7 @@ module.exports = {
 				topPrices = []
 			}
 
-			let sellEvaluation = evaluateSellPossibility(map[symbol])
+			let sellEvaluation = evaluateSellPossibility(map[symbol], symbol)
 			let buyEvaluation = evaluateBuyPossibility(map[symbol])
 
 			let sell = sellEvaluation.bool
@@ -102,6 +106,10 @@ module.exports = {
 
 			let buy = buyEvaluation.bool
 			let buyReason = buyEvaluation.reason
+
+			if (buy){
+				map[symbol].paidAt = recentClose
+			}
 
 			return {
 				symbol: symbol,
@@ -113,22 +121,24 @@ module.exports = {
 			}
 		}catch(err){
 			console.log('Error occured. Retrying...')
+			console.log(err)
 			if (err) {
-				await this.determine(market, symbol)
+				setTimeout(async () => {
+					await this.determine(market, symbol)					
+				})
 			}
-
 		}
 
 	}
 }
 
 function evaluateBuyPossibility(map){
-	if (checkIfHistoChangedSigns(map)){
-		return {
-			bool: true,
-			reason: 'Histogram went from negative to positve.'
-		}
-	}
+	// if (checkIfHistoChangedSigns(map)){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Histogram went from negative to positve.'
+	// 	}
+	// }
 
 	if (shortEMACrossedAboveLongEMA(map)){
 		return {
@@ -143,7 +153,13 @@ function evaluateBuyPossibility(map){
 	}
 }
 
-function evaluateSellPossibility(map){
+function evaluateSellPossibility(map, symbol){
+	if (metPercentageExpectation(map, symbol)){
+		return {
+			bool: true,
+			reason: 'Price increased by: ' + PERCENT_CHANGE + '%'
+		}
+	}
 
 	if (shortEMACrossedBelowLongEMA(map)){
 		return {
@@ -172,6 +188,24 @@ function evaluateSellPossibility(map){
 		bool: false,
 		reason: ''
 	}
+}
+
+function metPercentageExpectation(map, symbol){
+	if (map.paidAt === -1){
+		return false;
+	}
+
+	let currentArr = _.takeRight(map.lastClose)
+	let current = currentArr[0]
+
+	let difference = current - map.paidAt
+	let percentage = map.paidAt / difference
+
+	if (percentage >= PERCENT_CHANGE){
+		return true
+	}
+
+	return false
 }
 
 // means buy
