@@ -136,6 +136,7 @@ module.exports = {
 }
 
 function evaluateBuyPossibility(map, emaPosition){
+	console.log(map.emaPosition)
 	let emaPositionSwitched = false;
 
 	if (map.emaPosition === 'below' && emaPosition === 'above'){
