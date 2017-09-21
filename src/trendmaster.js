@@ -24,7 +24,8 @@ module.exports = {
 				macd: [],
 				histogram: [],
 				topPrices: [],
-				paidAt: -1
+				paidAt: null,
+				shortEMAPosition: null
 			})
 		}
 
@@ -98,8 +99,10 @@ module.exports = {
 				topPrices = []
 			}
 
+			let emaPosition = getShortEMAPosition(map[symbol].period5, map[symbol].period10)
+
 			let sellEvaluation = evaluateSellPossibility(map[symbol], symbol)
-			let buyEvaluation = evaluateBuyPossibility(map[symbol])
+			let buyEvaluation = evaluateBuyPossibility(map[symbol], emaPosition)
 
 			let sell = sellEvaluation.bool
 			let sellReason = sellEvaluation.reason
@@ -132,15 +135,16 @@ module.exports = {
 	}
 }
 
-function evaluateBuyPossibility(map){
-	// if (checkIfHistoChangedSigns(map)){
-	// 	return {
-	// 		bool: true,
-	// 		reason: 'Histogram went from negative to positve.'
-	// 	}
-	// }
+function evaluateBuyPossibility(map, emaPosition){
+	let emaPositionSwitched = false;
 
-	if (shortEMACrossedAboveLongEMA(map)){
+	if (map.emaPosition === 'below' && emaPosition === 'above'){
+		emaPositionSwitched = true
+	}
+
+	map.emaPosition = emaPosition
+
+	if (emaPositionSwitched){
 		return {
 			bool: true,
 			reason: 'Short EMA crossed above long EMA indicating a good time to buy.'
@@ -151,6 +155,17 @@ function evaluateBuyPossibility(map){
 		bool: false,
 		reason: ''
 	}
+}
+
+function getShortEMAPosition(period5, period10){
+	let lastPeriod5 = _.takeRight(period5)
+	let lastPeriod10 = _.takeRight(period10)
+
+	if (lastPeriod5[0] < lastPeriod10[0]){
+		return 'below'
+	}
+
+	return 'above'
 }
 
 function evaluateSellPossibility(map, symbol){
@@ -216,12 +231,20 @@ function shortEMACrossedAboveLongEMA(map){
 	console.log(shorts)
 	console.log(longs)
 
-	// let prevShort = shorts[0]
-	// let currentShort = shorts[1]
-	// let prevLong = longs[0]
-	// let currentLong = longs[1]
+	let prevShort = shorts[0]
+	let currentShort = shorts[1]
+	let prevLong = longs[0]
+	let currentLong = longs[1]
+	console.log(prevShort)
+	console.log(currentShort)
+	console.log(prevLong)
+	console.log(currentLong)
 
-	// console.log(chalk.blue({prevShort, currentShort}))
+	console.log('**************')
+
+	console.log(prevShort < prevLong)
+	console.log(currentShort > currentLong)
+	
 	// console.log(chalk.magenta({prevLong, currentLong}))
 
 	// if (prevShort < prevLong){
