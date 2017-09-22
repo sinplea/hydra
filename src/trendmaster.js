@@ -52,8 +52,6 @@ module.exports = {
 		try{
 			let recentClose = await getRecentClose(market, symbol)
 
-			// console.log({symbol, lastClose})
-
 			if(lastClose.length < SHORTEST_PERIOD){
 				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 5... ') + chalk.magenta(lastClose.length))
 				return
@@ -93,15 +91,17 @@ module.exports = {
 				subtractRights(macd, signal, histogram)
 			}
 
+			// If our histogram is positive track closing prices seperately
 			if(_.takeRight(histogram) > 0){
 				topPrices.push(_.takeRight(lastClose))
 			}else{
 				topPrices = []
 			}
 
+			// Is short period above or below long period?
 			let emaPosition = getShortEMAPosition(map[symbol].period5, map[symbol].period10)
 
-			let sellEvaluation = evaluateSellPossibility(map[symbol], symbol)
+			let sellEvaluation = evaluateSellPossibility(map[symbol], emaPosition)
 			let buyEvaluation = evaluateBuyPossibility(map[symbol], emaPosition)
 
 			let sell = sellEvaluation.bool
@@ -110,6 +110,7 @@ module.exports = {
 			let buy = buyEvaluation.bool
 			let buyReason = buyEvaluation.reason
 
+			// Keep track of the price we paid.
 			if (buy){
 				map[symbol].paidAt = recentClose
 			}
@@ -136,7 +137,6 @@ module.exports = {
 }
 
 function evaluateBuyPossibility(map, emaPosition){
-	console.log(map.emaPosition)
 	let emaPositionSwitched = false;
 
 	if (map.emaPosition === 'below' && emaPosition === 'above'){
@@ -169,15 +169,22 @@ function getShortEMAPosition(period5, period10){
 	return 'above'
 }
 
-function evaluateSellPossibility(map, symbol){
-	if (metPercentageExpectation(map, symbol)){
+function evaluateSellPossibility(map, emaPosition){
+	let emaPositionSwitched = false
+
+
+	if (metPercentageExpectation(map)){
 		return {
 			bool: true,
 			reason: 'Price increased by: ' + PERCENT_CHANGE + '%'
 		}
 	}
 
-	if (shortEMACrossedBelowLongEMA(map)){
+	if (map.emaPosition === 'above' && emaPosition === 'below'){
+		emaPositionSwitched = true
+	}
+
+	if (emaPositionSwitched){
 		return {
 			bool: true,
 			reason: 'Short EMA crossed below a long EMA indicating a time to sell.'
@@ -193,12 +200,12 @@ function evaluateSellPossibility(map, symbol){
 	}
 
 	// if the future isn't looking good.
-	// if (checkForSignificantLow(map)){
-	// 	return {
-	// 		bool: true,
-	// 		reason: 'Saw a significant drop in currency\'s best price.'
-	// 	}
-	// }
+	if (checkForSignificantLow(map)){
+		return {
+			bool: true,
+			reason: 'Saw a significant drop in currency\'s best price.'
+		}
+	}
 
 	return {
 		bool: false,
@@ -206,7 +213,7 @@ function evaluateSellPossibility(map, symbol){
 	}
 }
 
-function metPercentageExpectation(map, symbol){
+function metPercentageExpectation(map){
 	if (map.paidAt === -1){
 		return false;
 	}
@@ -219,62 +226,6 @@ function metPercentageExpectation(map, symbol){
 
 	if (percentage >= PERCENT_CHANGE){
 		return true
-	}
-
-	return false
-}
-
-// means buy
-function shortEMACrossedAboveLongEMA(map){
-	let shorts = _.takeRight(map.period5, 2)
-	let longs = _.takeRight(map.period10, 2)
-
-	console.log(shorts)
-	console.log(longs)
-
-	let prevShort = shorts[0]
-	let currentShort = shorts[1]
-	let prevLong = longs[0]
-	let currentLong = longs[1]
-	console.log(prevShort)
-	console.log(currentShort)
-	console.log(prevLong)
-	console.log(currentLong)
-
-	console.log('**************')
-
-	console.log(prevShort < prevLong)
-	console.log(currentShort > currentLong)
-	
-	// console.log(chalk.magenta({prevLong, currentLong}))
-
-	// if (prevShort < prevLong){
-	// 	if (currentShort > currentLong){
-	// 		return true
-	// 	}
-
-	// 	return false
-	// }
-
-	// return false
-}
-
-// means sell
-function shortEMACrossedBelowLongEMA(map){
-	let shorts = _.takeRight(map.period5, 2)
-	let longs = _.takeRight(map.period10, 2)
-
-	let prevShort = shorts[0]
-	let currentShort = shorts[1]
-	let prevLong = longs[0]
-	let currentLong = longs[1]
-
-	if (prevShort > prevLong){
-		if (currentShort < currentLong){
-			return true
-		}
-
-		return false
 	}
 
 	return false
@@ -298,19 +249,6 @@ function checkForSignificantLow(map){
 
 	if (percentage > maxPercentChange){
 		map.topPrices = []
-		return true
-	}
-
-	return false
-}
-
-// Checks over a longer history to avoid false occurences.
-function checkIfHistoChangedSigns(map){
-	let set = _.takeRight(map.histogram, 2)
-	let last = set[0]
-	let current = set[1]
-
-	if (last < 0 && current > 0){
 		return true
 	}
 
