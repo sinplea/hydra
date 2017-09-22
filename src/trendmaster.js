@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
-const PERCENT_CHANGE = 0.005
+const PERCENT_CHANGE = 0.01
 
 let map
 
@@ -152,6 +152,20 @@ function evaluateBuyPossibility(map, emaPosition){
 		}
 	}
 
+	if (histogramChangedFromNegativeToPositive(map)){
+		return {
+			bool: true,
+			reason: 'Histogram changed from negative to positive.'
+		}
+	}
+
+	if (closingPricesHaveBeenIncreasing(map)){
+		return {
+			bool: true,
+			reason: 'Closing prices have been increasing. Possible to jump on a bandwagon.'
+		}
+	}
+
 	return {
 		bool: false,
 		reason: ''
@@ -187,20 +201,6 @@ function evaluateSellPossibility(map, emaPosition){
 		return {
 			bool: true,
 			reason: 'Short EMA crossed below a long EMA indicating a time to sell.'
-		}
-	}
-
-	if (histogramChangedFromNegativeToPositive(map)){
-		return {
-			bool: true,
-			reason: 'Histogram changed from negative to positive.'
-		}
-	}
-
-	if (closingPricesHaveBeenIncreasing(map)){
-		return {
-			bool: true,
-			reason: 'Closing prices have been increasing. Possible to jump on a bandwagon.'
 		}
 	}
 
