@@ -128,7 +128,7 @@ module.exports = {
 			console.log(err)
 			if (err) {
 				setTimeout(async () => {
-					await this.determine(market, symbol)					
+					await this.determine(market, symbol)
 				})
 			}
 		}
@@ -172,7 +172,6 @@ function getShortEMAPosition(period5, period10){
 function evaluateSellPossibility(map, emaPosition){
 	let emaPositionSwitched = false
 
-
 	if (metPercentageExpectation(map)){
 		return {
 			bool: true,
@@ -188,6 +187,20 @@ function evaluateSellPossibility(map, emaPosition){
 		return {
 			bool: true,
 			reason: 'Short EMA crossed below a long EMA indicating a time to sell.'
+		}
+	}
+
+	if (histogramChangedFromNegativeToPositive(map)){
+		return {
+			bool: true,
+			reason: 'Histogram changed from negative to positive.'
+		}
+	}
+
+	if (closingPricesHaveBeenIncreasing(map)){
+		return {
+			bool: true,
+			reason: 'Closing prices have been increasing. Possible to jump on a bandwagon.'
 		}
 	}
 
@@ -211,6 +224,32 @@ function evaluateSellPossibility(map, emaPosition){
 		bool: false,
 		reason: ''
 	}
+}
+
+function histogramChangedFromNegativeToPositive(map){
+	let lastTwoEntries = _.takeRight(map.histogram, 2)
+	let prev = lastTwoEntries[0]
+	let current = lastTwoEntries[1]
+
+	if (prev < 0 && current > 0){
+		return true
+	}
+
+	return false
+}
+
+function closingPricesHaveBeenIncreasing(map){
+	let dataEntries = _.takeRight(map.lastClose, 3)
+
+	let oldest = dataEntries[0]
+	let prev = dataEntries[1]
+	let current = dataEntries[2]
+
+	if (current > prev && prev > oldest){
+		return true
+	}
+
+	return false
 }
 
 function metPercentageExpectation(map){
@@ -244,7 +283,7 @@ function checkForSignificantLow(map){
 		return false
 	}
 
-	let maxPercentChange = 0.03
+	let maxPercentChange = 0.15
 	let percentage = (difference / max) * 100
 
 	if (percentage > maxPercentChange){
@@ -269,7 +308,7 @@ function subtractRights(input1, input2, out){
 	out.push(_.takeRight(input1) - _.takeRight(input2))
 }
 
-// Pretty sure the ticker from ccxt is shit. Going to get 
+// Pretty sure the ticker from ccxt is shit. Going to get
 // prices from somewhere else.
 async function getRecentClose(market, symbol){
 	let clean = symbol.replace('/', '')
