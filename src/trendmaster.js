@@ -99,7 +99,7 @@ module.exports = {
 			}
 
 			// Is short period above or below long period?
-			let emaPosition = getShortEMAPosition(map[symbol].period5, map[symbol].period10)
+			let emaPosition = getShortEMAPosition(map[symbol].period20, map[symbol].period42)
 
 			let sellEvaluation = evaluateSellPossibility(map[symbol], emaPosition)
 			let buyEvaluation = evaluateBuyPossibility(map[symbol], emaPosition)
@@ -176,11 +176,11 @@ function evaluateBuyPossibility(map, emaPosition){
 	}
 }
 
-function getShortEMAPosition(period5, period10){
-	let lastPeriod5 = _.takeRight(period5)
-	let lastPeriod10 = _.takeRight(period10)
+function getShortEMAPosition(period20, period42){
+	let lastPeriod20 = _.takeRight(period20)
+	let lastPeriod42 = _.takeRight(period42)
 
-	if (lastPeriod5[0] < lastPeriod10[0]){
+	if (lastPeriod20[0] < lastPeriod42[0]){
 		return 'below'
 	}
 
