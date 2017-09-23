@@ -51,7 +51,7 @@ async function tryToBuyCurrency(sellOptions, balance, market){
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
 			console.log(chalk.yellow('Reason: ' + buyCurrencyStatus.buyReason))
 
-			await fillBuyOrder(market, buyCurrencyStatus.symbol, amount)
+			await fillBuyOrder(market, buyCurrencyStatus.symbol, amount, money)
 		}else{
 			console.log(chalk.red('USD bet is less than minimum allowed. Texting user.'))
 			alertUser()
@@ -77,23 +77,25 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 				return
 			}
 
+			let price = sellOptions.price * totalInvestment
+
 			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
 			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
-			await fillSellOrder(market, current, _.round(totalInvestment, 8))
+			await fillSellOrder(market, current, _.round(totalInvestment, 8), price)
 		}
 	}, delayModifier * 1000)
 }
 
-async function fillSellOrder(market, symbol, amount){
+async function fillSellOrder(market, symbol, amount, price){
 	try{
-		let ticket = await market.createMarketSellOrder(symbol, amount)
+		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))
 	}catch (err){
 		console.log(chalk.red(err))
 	}
 }
 
-async function fillBuyOrder(market, symbol, amount){
+async function fillBuyOrder(market, symbol, amount, price){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))

@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
-const PERCENT_CHANGE = 0.01
+const PERCENT_CHANGE = 0.005
 
 let map
 
@@ -16,10 +16,10 @@ module.exports = {
 		for (let i = 0; i < symbols.length; i++){
 			empty.push({
 				lastClose: [],
-				period5: [],
-				period10: [],
 				period12: [],
+				period20: [],
 				period26: [],
+				period42: [],
 				signal: [],
 				macd: [],
 				histogram: [],
@@ -32,17 +32,17 @@ module.exports = {
 		map = _.zipObject(symbols, empty)
 	},
 	determine: async function(market, symbol){
-		const SHORTEST_PERIOD = 5
-		const SHORTER_PERIOD = 10
 		const SHORT_PERIOD = 12
+		const MIDDLE_PERIOD = 20
 		const LONG_PERIOD = 26
+		const SUPER_LONG_PERIOD = 42
 		const SIGNAL = 9
 
 		let lastClose = map[symbol].lastClose
-		let period5 = map[symbol].period5
-		let period10 = map[symbol].period10
 		let period12 = map[symbol].period12
+		let period20 = map[symbol].period20
 		let period26 = map[symbol].period26
+		let period42 = map[symbol].period42
 		let signal = map[symbol].signal
 		let macd = map[symbol].macd
 		let histogram = map[symbol].histogram
@@ -52,25 +52,18 @@ module.exports = {
 		try{
 			let recentClose = await getRecentClose(market, symbol)
 
-			if(lastClose.length < SHORTEST_PERIOD){
-				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 5... ') + chalk.magenta(lastClose.length))
-				return
-			}else{
-				calculateEMA(period5, lastClose, symbol, SHORTEST_PERIOD)
-			}
-
-			if(lastClose.length < SHORTER_PERIOD){
-				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for period 10... ') + chalk.magenta(lastClose.length))
-				return
-			}else{
-				calculateEMA(period10, lastClose, symbol, SHORTEST_PERIOD)
-			}
-
 			if(lastClose.length < SHORT_PERIOD){
 				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for short period... ') + chalk.magenta(lastClose.length))
 				return
 			}else{
 				calculateEMA(period12, lastClose, symbol, SHORT_PERIOD)
+			}
+
+			if(lastClose.length < MIDDLE_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for middle period... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period20, lastClose, symbol, MIDDLE_PERIOD)
 			}
 
 			if(lastClose.length < LONG_PERIOD){
@@ -89,6 +82,13 @@ module.exports = {
 				calculateEMA(signal, macd, symbol, SIGNAL)
 				// calculate histogram
 				subtractRights(macd, signal, histogram)
+			}
+
+			if(lastClose.length < SUPER_LONG_PERIOD){
+				console.log(chalk.blue('[' + symbol + '] ') + chalk.yellow('Getting more data for super long period... ') + chalk.magenta(lastClose.length))
+				return
+			}else{
+				calculateEMA(period42, lastClose, symbol, SUPER_LONG_PERIOD)
 			}
 
 			// If our histogram is positive track closing prices seperately
@@ -111,8 +111,12 @@ module.exports = {
 			let buyReason = buyEvaluation.reason
 
 			// Keep track of the price we paid.
-			if (buy){
+			if (buy && map[symbol].paidAt === null){
 				map[symbol].paidAt = recentClose
+			}
+
+			if (sell){
+				map[symbol].paidAt = null
 			}
 
 			return {
@@ -152,19 +156,19 @@ function evaluateBuyPossibility(map, emaPosition){
 		}
 	}
 
-	if (histogramChangedFromNegativeToPositive(map)){
-		return {
-			bool: true,
-			reason: 'Histogram changed from negative to positive.'
-		}
-	}
-
-	if (closingPricesHaveBeenIncreasing(map)){
-		return {
-			bool: true,
-			reason: 'Closing prices have been increasing. Possible to jump on a bandwagon.'
-		}
-	}
+	// if (histogramChangedFromNegativeToPositive(map)){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Histogram changed from negative to positive.'
+	// 	}
+	// }
+	//
+	// if (closingPricesHaveBeenIncreasing(map)){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Closing prices have been increasing. Possible to jump on a bandwagon.'
+	// 	}
+	// }
 
 	return {
 		bool: false,
@@ -204,21 +208,21 @@ function evaluateSellPossibility(map, emaPosition){
 		}
 	}
 
-	// if trending down
-	if (_.takeRight(map.histogram) < 0){
-		return {
-			bool: true,
-			reason: 'Histogram indicated a down trend.'
-		}
-	}
-
-	// if the future isn't looking good.
-	if (checkForSignificantLow(map)){
-		return {
-			bool: true,
-			reason: 'Saw a significant drop in currency\'s best price.'
-		}
-	}
+	// // if trending down
+	// if (_.takeRight(map.histogram) < 0){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Histogram indicated a down trend.'
+	// 	}
+	// }
+	//
+	// // if the future isn't looking good.
+	// if (checkForSignificantLow(map)){
+	// 	return {
+	// 		bool: true,
+	// 		reason: 'Saw a significant drop in currency\'s best price.'
+	// 	}
+	// }
 
 	return {
 		bool: false,
