@@ -5,7 +5,7 @@
     A tests launcher. Runs tests for all languages and all exchanges, in
     parallel, with a humanized error reporting.
 
-    Usage: node run-tests [--php] [--js] [--python] [--es6] [exchange] [symbol]
+    Usage: node run-tests [--php] [--js] [--python] [--python3] [exchange] [symbol]
 
     --------------------------------------------------------------------------- */
 
@@ -28,7 +28,6 @@ const keys = {
     '--php': false,     // run PHP tests only
     '--python': false,  // run Python 2 tests only
     '--python3': false, // run Python 3 tests only
-    '--es6': false,     // run JS tests against ccxt.js instead of ccxt-es5.js (no need to `npm run build` before)
 }
 
 let exchanges = []
@@ -113,10 +112,10 @@ const testExchange = async (exchange) => {
     const args = [exchange, ...symbol === 'all' ? [] : symbol]
         , allTests = [
 
-            { language: 'JavaScript', key: '--js',      exec: ['node',      'test.js',  ...args, ...keys['--es6'] ? ['--es6'] : []] },
-            { language: 'Python',     key: '--python',  exec: ['python',    'test.py',  ...args]                                    },
-            { language: 'Python 3',   key: '--python3', exec: ['python3',   'test.py',  ...args]                                    },
-            { language: 'PHP',        key: '--php',     exec: ['php', '-f', 'test.php', ...args]                                    }
+            { language: 'JavaScript', key: '--js',      exec: ['node',      'test/test.js',       ...args] },
+            { language: 'Python',     key: '--python',  exec: ['python',    'test/test.py',       ...args] },
+            { language: 'Python 3',   key: '--python3', exec: ['python3',   'test/test_async.py', ...args] },
+            { language: 'PHP',        key: '--php',     exec: ['php', '-f', 'test/test.php',      ...args] }
         ]
         , selectedTests  = allTests.filter (t => keys[t.key])
         , scheduledTests = selectedTests.length ? selectedTests : allTests
@@ -176,7 +175,7 @@ const testExchange = async (exchange) => {
 
     if (failed.length)   { log.noPretty.bright.red    ('FAIL'.bgBrightRed.white,    failed  .map (t => t.exchange)) }
     if (warnings.length) { log.noPretty.bright.yellow ('WARN'.inverse, warnings.map (t => t.exchange)) }
-    
+
     log.newline ()
 
     log.bright ('All done,', [failed.length    && (failed.length    + ' failed')   .red,
@@ -185,7 +184,7 @@ const testExchange = async (exchange) => {
 
     if (failed.length) {
 
-        await sleep (2000)
+        await sleep (10000) // to fight TravisCI log truncation issue, see https://github.com/travis-ci/travis-ci/issues/8189
         process.exit (1)
     }
 

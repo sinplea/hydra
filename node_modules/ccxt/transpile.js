@@ -127,6 +127,8 @@ while (exchanges = regex.exec (contents)) {
                         .replace ('fetchAllMyTrades',  'fetch_all_my_trades')
                         .replace ('createOrder',       'create_order')
                         .replace ('cancelOrder',       'cancel_order')
+                        .replace ('calculateFeeRate',  'calculate_fee_rate')
+                        .replace ('calculateFee',      'calculate_fee')
                         .replace ('signIn',            'sign_in')
 
         args = args.length ? args.split (',').map (x => x.trim ()) : []
@@ -158,6 +160,7 @@ while (exchanges = regex.exec (contents)) {
             [ /this\.stringToBinary\s*\((.*)\)/g, '$1' ],
             [ /this\.stringToBase64\s/g, 'base64.b64encode' ],
             [ /this\.base64ToBinary\s/g, 'base64.b64decode' ],
+            [ /\.safeFloat\s/g, '.safe_float'],
             [ /\.binaryConcat\s/g, '.binary_concat'],
             [ /\.binaryToString\s/g, '.binary_to_string' ],
             [ /\.implodeParams\s/g, '.implode_params'],
@@ -181,6 +184,8 @@ while (exchanges = regex.exec (contents)) {
             [ /\.fetchOpenOrders\s/g, '.fetch_open_orders'],
             [ /\.fetchOrders\s/g, '.fetch_orders'],
             [ /\.loadMarkets\s/g, '.load_markets'],
+            [ /\.calculateFeeRate\s/g, '.calculate_fee_rate'],
+            [ /\.calculateFee\s/g, '.calculate_fee'],
             [ /\.encodeURIComponent\s/g, '.encode_uri_component'],
             // [ /this\.urlencode\s/g, '_urlencode.urlencode ' ], // use self.urlencode instead
             [ /this\./g, 'self.' ],
@@ -250,6 +255,7 @@ while (exchanges = regex.exec (contents)) {
             [ /this\.stringToBinary\s*\((.*)\)/g, '$1' ],
             [ /this\.stringToBase64/g, 'base64_encode' ],
             [ /this\.base64ToBinary/g, 'base64_decode' ],
+            [ /\.safeFloat/g, '.safe_float'],
             [ /\.parseOHLCVs/g, '.parse_ohlcvs'],
             [ /\.parseOHLCV/g, '.parse_ohlcv'],
             [ /\.parseTicker/g, '.parse_ticker'],
@@ -273,6 +279,8 @@ while (exchanges = regex.exec (contents)) {
             [ /\.parseOrders/g, '.parse_orders'],
             [ /\.parseOrder/g, '.parse_order'],
             [ /\.loadMarkets/g, '.load_markets'],
+            [ /\.calculateFeeRate/g, '.calculate_fee_rate'],
+            [ /\.calculateFee/g, '.calculate_fee'],
             [ /\.encodeURIComponent/g, '.encode_uri_component'],
             [ /this\./g, '$this->' ],
             [ / this;/g, ' $this;' ],
