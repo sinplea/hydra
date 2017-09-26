@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
 
-const PERCENT_CHANGE = 0.05
+const PERCENT_CHANGE = 0.08
 let map
 
 module.exports = {
