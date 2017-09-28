@@ -7,8 +7,9 @@ const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
 const authToken = '6e502eaa008df7d3e081b66c4cadc286'
 const client = new twilio(accountSid, authToken)
 
-const BET_PERCENTAGE = 0.30 // percentage to take from total usd
+const BET_PERCENTAGE = 0.40 // percentage to take from total usd
 const MIN_BALANCE = 7.5
+const TRADE_DELAY = 2500
 
 module.exports = {
 	trade: async function(sellOptions, market){
@@ -19,12 +20,14 @@ module.exports = {
 			let currencies = findInvestments(balance)
 
 			for (let i = 0; i < currencies.length; i++){
-				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				setTimeout(async () => {
+					await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				})
 			}
 
 			setTimeout(async () => {
 				await tryToBuyCurrency(sellOptions, balance, market)
-			}, 3000)
+			}, TRADE_DELAY)
 
 		}catch(err){
 			console.log(err)
@@ -42,11 +45,12 @@ async function tryToBuyCurrency(sellOptions, balance, market){
 	// if we want to buy a currency
 	if (buyCurrencyStatus !== undefined){
 		// check if we have USD
-		let money = balance.USD.free * BET_PERCENTAGE
+
+		let money = _.floor(balance.USD.free * BET_PERCENTAGE, 6)
 
 		if (money > MIN_BALANCE){
 			let lastBestPrice = buyCurrencyStatus.price
-			let amount = _.round(money / lastBestPrice, 6)
+			let amount = _.floor(money / lastBestPrice, 6)
 
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
 			console.log(chalk.yellow('Reason: ' + buyCurrencyStatus.buyReason))
@@ -83,7 +87,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 			await fillSellOrder(market, current, _.floor(totalInvestment, 6), price)
 		}
-	}, delayModifier * 1000)
+	}, delayModifier * TRADE_DELAY)
 }
 
 async function fillSellOrder(market, symbol, amount, price){
