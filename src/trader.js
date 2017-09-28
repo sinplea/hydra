@@ -20,9 +20,7 @@ module.exports = {
 			let currencies = findInvestments(balance)
 
 			for (let i = 0; i < currencies.length; i++){
-				setTimeout(async () => {
-					await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
-				})
+				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
 			}
 
 			setTimeout(async () => {
@@ -64,30 +62,33 @@ async function tryToBuyCurrency(sellOptions, balance, market){
 }
 
 async function tryToSellCurrency(sellOptions, balance, market, current, delayModifier){
-	setTimeout(async () => {
-		// get sell/buy status from sellOptions
-		let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
+	// get sell/buy status from sellOptions
+	let sellCurrencyStatuses = _.find(sellOptions, function(o){ return o.symbol === current})
 
-		if (sellCurrencyStatuses == undefined) {
+	if (sellCurrencyStatuses == undefined) {
+		return
+	}
+
+	delayModifier += 1;
+
+	// if sell
+	if (sellCurrencyStatuses.sell === true){
+		let symbolLookUpString = current.split('/')[0]
+		let totalInvestment = balance[symbolLookUpString].free
+
+		if (totalInvestment < 0.0001) {
 			return
 		}
 
-		// if sell
-		if (sellCurrencyStatuses.sell === true){
-			let symbolLookUpString = current.split('/')[0]
-			let totalInvestment = balance[symbolLookUpString].free
+		let price = sellOptions.price * totalInvestment
 
-			if (totalInvestment < 0.0001) {
-				return
-			}
+		console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
+		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 
-			let price = sellOptions.price * totalInvestment
-
-			console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
-			console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
+		setTimeout(async() => {
 			await fillSellOrder(market, current, _.floor(totalInvestment, 6), price)
-		}
-	}, delayModifier * TRADE_DELAY)
+		}, delayModifier * TRADE_DELAY)
+	}
 }
 
 async function fillSellOrder(market, symbol, amount, price){
