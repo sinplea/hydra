@@ -69,8 +69,6 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 		return
 	}
 
-	delayModifier += 1;
-
 	// if sell
 	if (sellCurrencyStatuses.sell === true){
 		let symbolLookUpString = current.split('/')[0]
@@ -86,17 +84,22 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 
 		setTimeout(async() => {
-			await fillSellOrder(market, current, _.floor(totalInvestment, 6), price)
+			await fillSellOrder(market, current, _.floor(totalInvestment, 6))
 		}, delayModifier * TRADE_DELAY)
 	}
 }
 
-async function fillSellOrder(market, symbol, amount, price){
+async function fillSellOrder(market, symbol, amount){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))
 	}catch (err){
-		console.log(chalk.red(err))
+
+		if (err === "Error: request timed out"){
+			fillSellOrder(market, symbol, amount)
+		}else{
+			console.log(chalk.red(err))
+		}
 	}
 }
 
