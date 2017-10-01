@@ -9,7 +9,7 @@ const client = new twilio(accountSid, authToken)
 
 const BET_PERCENTAGE = 0.40 // percentage to take from total usd
 const MIN_BALANCE = 7.5
-const TRADE_DELAY = 2500
+const TRADE_DELAY = 3000
 
 module.exports = {
 	trade: async function(sellOptions, market){
@@ -53,7 +53,7 @@ async function tryToBuyCurrency(sellOptions, balance, market){
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
 			console.log(chalk.yellow('Reason: ' + buyCurrencyStatus.buyReason))
 
-			await fillBuyOrder(market, buyCurrencyStatus.symbol, amount, money)
+			return await fillBuyOrder(market, buyCurrencyStatus.symbol, amount, money)
 		}else{
 			console.log(chalk.red('USD bet is less than minimum allowed. Texting user.'))
 			alertUser()
@@ -68,6 +68,8 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 	if (sellCurrencyStatuses == undefined) {
 		return
 	}
+
+	delayModifier += 1;
 
 	// if sell
 	if (sellCurrencyStatuses.sell === true){
@@ -84,7 +86,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 
 		setTimeout(async() => {
-			await fillSellOrder(market, current, _.floor(totalInvestment, 6))
+			return await fillSellOrder(market, current, _.floor(totalInvestment, 6))
 		}, delayModifier * TRADE_DELAY)
 	}
 }
@@ -93,12 +95,13 @@ async function fillSellOrder(market, symbol, amount){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))
+		return
 	}catch (err){
-
-		if (err === "Error: request timed out"){
-			fillSellOrder(market, symbol, amount)
-		}else{
-			console.log(chalk.red(err))
+		if (err.message === "request timed out"){
+			console.log(chalk.red("Request timed out. Trying again..."))
+			setTimeout(async() => {
+				await fillSellOrder(market, symbol, amout)
+			}, TRADE_DELAY)
 		}
 	}
 }
@@ -107,6 +110,7 @@ async function fillBuyOrder(market, symbol, amount, price){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))
+		return
 	}catch (err){
 		console.log(chalk.red(err))
 	}
