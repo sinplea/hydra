@@ -7,6 +7,7 @@ const trader = require('./trader.js')
 const trendmaster = require('./trendmaster.js')
 
 const RUN_COOLDOWN = 900000 // 15 minutes
+const TRADE_COOLDOWN = 3000
 const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
 const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
 
@@ -47,7 +48,7 @@ async function run(market, symbols){
 		console.log(chalk.green('[____Running____]'))
 		let results = await strategize(market, symbols)
 		if (results !== undefined){
-				await trader.trade(results, market) // evaluate trade possibilites
+            await trader.trade(results, market) // evaluate trade possibilites
 		}
 		setTimeout(async () => { await run(market, symbols) }, RUN_COOLDOWN)
 	}catch(err){
@@ -72,19 +73,19 @@ async function strategize(market, symbols){
 
 	// throttle this to avoid kraken timing out our requests
 	for(let i = 0; i < symbols.length; i++){
-			try{
-				let sellOptions = await trendmaster.determine(market, symbols[i])
+        try{
+            let sellOptions = await trendmaster.determine(market, symbols[i])
 
-				if (sellOptions !== undefined){
-					results.push(sellOptions)
-				}
+            if (sellOptions !== undefined){
+                results.push(sellOptions)
+            }
 
-				if (i === symbols.length - 1 && results.length > 0){
-						return results
-				}
-			}catch(err){
-				console.log(err)
-			}
+            if (i === symbols.length - 1 && results.length > 0){
+                    return results
+            }
+        }catch(err){
+            console.log(err)
+        }
 	}
 }
 

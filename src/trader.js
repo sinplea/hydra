@@ -15,7 +15,7 @@ module.exports = {
 	trade: async function(sellOptions, market){
 
 		try{
-			let balance = await market.fetchBalance()
+			let balance = await market.fetchBalance() // 1 api call
 			// currencies I currently have money invested in
 			let currencies = findInvestments(balance)
 
@@ -53,7 +53,7 @@ async function tryToBuyCurrency(sellOptions, balance, market){
 			console.log(chalk.magenta("Trying to buy: " + amount + ' of ' + buyCurrencyStatus.symbol + ' with ' + money + ' USD'))
 			console.log(chalk.yellow('Reason: ' + buyCurrencyStatus.buyReason))
 
-			return await fillBuyOrder(market, buyCurrencyStatus.symbol, amount, money)
+			return await fillBuyOrder(market, buyCurrencyStatus.symbol, amount)
 		}else{
 			console.log(chalk.red('USD bet is less than minimum allowed. Texting user.'))
 			alertUser()
@@ -93,26 +93,21 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 
 async function fillSellOrder(market, symbol, amount){
 	try{
-		let ticket = await market.createMarketBuyOrder(symbol, amount)
+		let ticket = await market.createMarketSellOrder(symbol, amount)
 		console.log(chalk.green(ticket))
 		return
 	}catch (err){
-		if (err.message === "request timed out"){
-			console.log(chalk.red("Request timed out. Trying again..."))
-			setTimeout(async() => {
-				await fillSellOrder(market, symbol, amout)
-			}, TRADE_DELAY)
-		}
+		console.log(chalk.bgRed('Sell order failed:') + chalk.red(err))
 	}
 }
 
-async function fillBuyOrder(market, symbol, amount, price){
+async function fillBuyOrder(market, symbol, amount){
 	try{
 		let ticket = await market.createMarketBuyOrder(symbol, amount)
 		console.log(chalk.green(ticket))
 		return
 	}catch (err){
-		console.log(chalk.red(err))
+		console.log(chalk.bgRed('Buy order failed') + chalk.red(err))
 	}
 }
 
