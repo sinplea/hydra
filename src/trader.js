@@ -2,6 +2,8 @@ const _ = require('lodash')
 const ccxt = require('ccxt')
 const twilio = require('twilio')
 const chalk = require('chalk')
+const throttledQueue = require('throttled-queue')
+
 
 const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
 const authToken = '6e502eaa008df7d3e081b66c4cadc286'
@@ -10,6 +12,7 @@ const client = new twilio(accountSid, authToken)
 const BET_PERCENTAGE = 0.40 // percentage to take from total usd
 const MIN_BALANCE = 7.5
 const TRADE_DELAY = 3000
+const throttle = throttledQueue(1, TRADE_DELAY)
 
 module.exports = {
 	trade: async function(sellOptions, market){
@@ -20,7 +23,9 @@ module.exports = {
 			let currencies = findInvestments(balance)
 
 			for (let i = 0; i < currencies.length; i++){
-				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				throttle(async ()=> {
+					await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				})
 			}
 
 			setTimeout(async () => {
@@ -85,9 +90,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 		console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
 		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 
-		setTimeout(async() => {
-			return await fillSellOrder(market, current, _.floor(totalInvestment, 6))
-		}, delayModifier * TRADE_DELAY)
+		return await fillSellOrder(market, current, _.floor(totalInvestment, 6))
 	}
 }
 
