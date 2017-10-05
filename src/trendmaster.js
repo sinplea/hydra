@@ -125,7 +125,8 @@ module.exports = {
 				buy: buy,
 				price: recentClose,
 				buyReason: buyReason,
-				sellReason: sellReason
+				sellReason: sellReason,
+				paidAt: map[symbol].paidAt 
 			}
 		}catch(err){
 			console.log('Error occured. Retrying...')
