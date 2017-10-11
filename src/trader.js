@@ -20,7 +20,9 @@ module.exports = {
 			let currencies = findInvestments(balance)
 
 			for (let i = 0; i < currencies.length; i++){
-				await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				throttle(async() => {
+					await tryToSellCurrency(sellOptions, balance, market, currencies[i], i)
+				})
 			}
 
 			setTimeout(async () => {
@@ -85,7 +87,7 @@ async function tryToSellCurrency(sellOptions, balance, market, current, delayMod
 		console.log(chalk.magenta("Trying to sell: " + totalInvestment + " of " + current))
 		console.log(chalk.yellow('Reason: ' + sellCurrencyStatuses.sellReason))
 
-		_.thottle(await fillSellOrder(market, current, _.floor(totalInvestment, 6, sellOptions, price), TRADE_DELAY))
+		await fillSellOrder(market, current, _.floor(totalInvestment, 6, sellOptions, price), TRADE_DELAY)
 	}
 }
 
