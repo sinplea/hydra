@@ -9,8 +9,8 @@ const trendmaster = require('./trendmaster.js')
 
 const RUN_COOLDOWN = 60000 // 15 minutes
 const TRADE_COOLDOWN = 3000
-const API_KEY = 'TBGwtBty2vkuM0xfbPSFrhIlbAcc3tEjdfxAtPtud2iT0BiNlrZXFf/j'
-const API_SECRET = 'Obi30JzVzkGYcs7GFAeIocN+wMHUnQ3rxEfzEKCUC7sfSw+jVdQC/XgcCfbk2VOXwYKMeh1DFhQhuJI61upVwQ=='
+const API_KEY = 'kraken_api'
+const API_SECRET = 'kraken_secret'
 
 const figletOptions = {
 	font: 'Jazmine',

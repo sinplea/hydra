@@ -1,3 +1,15 @@
+/**
+ * Trendmaster.js is responsible for determining
+ * metrics that could cause a cryptocurreny to be considered
+ * valuable. (like ema crossovers, etc...)
+ *
+ * Note: I'm not a trading expert, so must of these functions are
+ * not indictive of smart trading. DO NOT USE THIS BOT without modifing
+ * parameters or creating new functions.
+ *
+ * Again this bot will make trades on Kraken, but I don't guarntee you will
+ * make money from this bot. USE AT YOUR OWN RISK!
+ */
 const axios = require('axios')
 const moment = require('moment')
 const _ = require('lodash')
@@ -126,7 +138,7 @@ module.exports = {
 				price: recentClose,
 				buyReason: buyReason,
 				sellReason: sellReason,
-				paidAt: map[symbol].paidAt 
+				paidAt: map[symbol].paidAt
 			}
 		}catch(err){
 			console.log('Error occured. Retrying...')
@@ -313,8 +325,8 @@ function subtractRights(input1, input2, out){
 	out.push(_.takeRight(input1) - _.takeRight(input2))
 }
 
-// Pretty sure the ticker from ccxt is shit. Going to get
-// prices from somewhere else.
+// accuracy from ccxt ticker seemed inaccurate. not sure. Going to get
+// prices from cryptowat.ch
 async function getRecentClose(market, symbol){
 	let clean = symbol.replace('/', '')
 	let lowercase = clean.toLowerCase();

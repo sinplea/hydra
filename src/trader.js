@@ -3,8 +3,8 @@ const ccxt = require('ccxt')
 const twilio = require('twilio')
 const chalk = require('chalk')
 
-const accountSid = 'AC0082db851c269381c28c189ffb5cb2af'
-const authToken = '6e502eaa008df7d3e081b66c4cadc286'
+const accountSid = 'twilio_sid'
+const authToken = 'twilio_auth'
 const client = new twilio(accountSid, authToken)
 
 const BET_PERCENTAGE = 0.40 // percentage to take from total usd
