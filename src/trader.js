@@ -6,6 +6,8 @@ const chalk = require('chalk')
 const accountSid = 'twilio_sid'
 const authToken = 'twilio_auth'
 const client = new twilio(accountSid, authToken)
+const twilioSender = 'phonenumber'
+const twilioReciever = 'phonenumber'
 
 const BET_PERCENTAGE = 0.40 // percentage to take from total usd
 const MIN_BALANCE = 7.5
@@ -115,8 +117,8 @@ async function fillBuyOrder(market, symbol, amount){
 function alertUser(){
 	client.messages.create({
 		body: 'Hydra: USD balance has fallen below $' + MIN_BALANCE + '. Deposit more if you would like to continue trading. https://www.kraken.com/u/funding/deposit',
-		to: '+16188068292',
-		from: '+17082953385'
+		to: twilioReciever,
+		from: twilioSender
 	})
 }
 
